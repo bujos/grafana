@@ -9,13 +9,13 @@ import {
 } from '@grafana/data';
 
 import {
-  StringToTimeTransformerOptions,
-  stringToTimeFieldInfo,
-} from '@grafana/data/src/transformations/transformers/stringToTime';
+  FieldConversionTransformerOptions,
+  fieldConversionFieldInfo,
+} from '@grafana/data/src/transformations/transformers/fieldConversion';
 import { InlineField, InlineFieldRow, Select } from '@grafana/ui';
 import { useAllFieldNamesFromDataFrames } from './utils';
 
-export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringToTimeTransformerOptions>> = ({
+export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<FieldConversionTransformerOptions>> = ({
   input,
   options,
   onChange,
@@ -77,33 +77,33 @@ export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringTo
   return (
     <div>
       <InlineFieldRow>
-        <InlineField label={stringToTimeFieldInfo.targetField.label} grow={true}>
+        <InlineField label={fieldConversionFieldInfo.targetField.label} grow={true}>
           <Select
             menuShouldPortal
             options={selectableFieldNames}
             value={options.targetField}
-            placeholder={stringToTimeFieldInfo.targetField.description}
+            placeholder={fieldConversionFieldInfo.targetField.description}
             onChange={onSelectField}
           />
         </InlineField>
       </InlineFieldRow>
       <InlineFieldRow>
-        <InlineField label={stringToTimeFieldInfo.destinationType.label} grow={true}>
+        <InlineField label={fieldConversionFieldInfo.destinationType.label} grow={true}>
           <Select
             menuShouldPortal
             options={allTypes}
             value={options.destinationType}
-            placeholder={stringToTimeFieldInfo.destinationType.description}
+            placeholder={fieldConversionFieldInfo.destinationType.description}
             onChange={onSelectDestinationType}
           />
         </InlineField>
         {options.destinationType === FieldType.time && (
-          <InlineField label={stringToTimeFieldInfo.dateFormat.label} grow={true}>
+          <InlineField label={fieldConversionFieldInfo.dateFormat.label} grow={true}>
             <Select
               menuShouldPortal
               options={dateFormats}
               value={options.dateFormat}
-              placeholder={stringToTimeFieldInfo.dateFormat.description}
+              placeholder={fieldConversionFieldInfo.dateFormat.description}
               onChange={onSelectFormat}
             />
           </InlineField>
@@ -113,10 +113,10 @@ export const StringToTimeTransformerEditor: React.FC<TransformerUIProps<StringTo
   );
 };
 
-export const stringToTimeTransformRegistryItem: TransformerRegistryItem<StringToTimeTransformerOptions> = {
-  id: DataTransformerID.stringToTime,
-  editor: StringToTimeTransformerEditor,
-  transformation: standardTransformers.stringToTimeTransformer,
-  name: standardTransformers.stringToTimeTransformer.name,
-  description: standardTransformers.stringToTimeTransformer.description,
+export const fieldConversionTransformRegistryItem: TransformerRegistryItem<FieldConversionTransformerOptions> = {
+  id: DataTransformerID.fieldConversion,
+  editor: FieldConversionTransformerEditor,
+  transformation: standardTransformers.fieldConversionTransformer,
+  name: standardTransformers.fieldConversionTransformer.name,
+  description: standardTransformers.fieldConversionTransformer.description,
 };

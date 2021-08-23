@@ -7,7 +7,7 @@ import { dateTimeParse } from '../../datetime';
 import { isFinite, isNumber } from 'lodash';
 import { ArrayVector } from '../../vector';
 
-export interface StringToTimeTransformerOptions {
+export interface FieldConversionTransformerOptions {
   targetField: string | undefined;
   destinationType: FieldType | undefined;
   dateFormat?: string;
@@ -24,7 +24,7 @@ export interface FieldConversionOptions {
  *
  * @internal
  */
-export const stringToTimeFieldInfo = {
+export const fieldConversionFieldInfo = {
   targetField: {
     label: 'Target field',
     description: 'Select the target field',
@@ -42,21 +42,21 @@ export const stringToTimeFieldInfo = {
 /**
  * @alpha
  */
-export const stringToTimeTransformer: SynchronousDataTransformerInfo<StringToTimeTransformerOptions> = {
-  id: DataTransformerID.stringToTime,
-  name: 'String to Time',
-  description: 'Make a string field a time field',
+export const fieldConversionTransformer: SynchronousDataTransformerInfo<FieldConversionTransformerOptions> = {
+  id: DataTransformerID.fieldConversion,
+  name: 'Convert Fields',
+  description: 'Convert a field to a specified field type',
   defaultOptions: {
     fields: {},
   },
 
-  operator: (options) => (source) => source.pipe(map((data) => stringToTimeTransformer.transformer(options)(data))),
+  operator: (options) => (source) => source.pipe(map((data) => fieldConversionTransformer.transformer(options)(data))),
 
-  transformer: (options: StringToTimeTransformerOptions) => (data: DataFrame[]) => {
+  transformer: (options: FieldConversionTransformerOptions) => (data: DataFrame[]) => {
     if (!Array.isArray(data) || data.length === 0) {
       return data;
     }
-    const timeParsed = stringToTime(options, data);
+    const timeParsed = fieldConversion(options, data);
     if (!timeParsed) {
       return [];
     }
@@ -67,19 +67,26 @@ export const stringToTimeTransformer: SynchronousDataTransformerInfo<StringToTim
 /**
  * @alpha
  */
-export function stringToTime(options: StringToTimeTransformerOptions, frames: DataFrame[]): DataFrame[] {
+export function fieldConversion(options: FieldConversionTransformerOptions, frames: DataFrame[]): DataFrame[] {
   if (!options.targetField) {
     return frames;
   }
 
   const frameCopy: DataFrame[] = [];
+  let conversions = 0;
 
   for (const frame of frames) {
     for (let fieldIdx = 0; fieldIdx < frame.fields.length; fieldIdx++) {
       let field = frame.fields[fieldIdx];
       if (field.name === options.targetField) {
         //check in about matchers with Ryan
-        frame.fields[fieldIdx] = ensureTimeField(field, options.dateFormat);
+        if (options.destinationType === FieldType.time) {
+          frame.fields[fieldIdx] = ensureTimeField(field, options.dateFormat);
+        }
+        conversions++;
+        // if (conversions === options.conversions.length) {
+        //   break;
+        // }
       }
     }
     frameCopy.push(frame);

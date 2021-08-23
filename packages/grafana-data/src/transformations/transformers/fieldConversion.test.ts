@@ -1,7 +1,7 @@
 import { toDataFrame } from '../../dataframe/processDataFrame';
 import { FieldType } from '../../types/dataFrame';
 import { mockTransformationsRegistry } from '../../utils/tests/mockTransformationsRegistry';
-import { ensureTimeField, stringToTime, stringToTimeTransformer } from './stringToTime';
+import { ensureTimeField, fieldConversion, fieldConversionTransformer } from './fieldConversion';
 
 const stringTime = toDataFrame({
   fields: [
@@ -67,7 +67,7 @@ const misformattedStrings = toDataFrame({
 //add case for dates with specified format
 describe('field conversion transformer', () => {
   beforeAll(() => {
-    mockTransformationsRegistry([stringToTimeTransformer]);
+    mockTransformationsRegistry([fieldConversionTransformer]);
   });
 
   it('will parse properly formatted strings to time', () => {
@@ -76,7 +76,7 @@ describe('field conversion transformer', () => {
       destinationType: FieldType.time,
     };
 
-    const timeified = stringToTime(options, [stringTime]);
+    const timeified = fieldConversion(options, [stringTime]);
     expect(
       timeified[0].fields.map((f) => ({
         name: f.name,
@@ -101,7 +101,7 @@ describe('field conversion transformer', () => {
       destinationType: FieldType.time,
     };
 
-    const timeified = stringToTime(options, [misformattedStrings]);
+    const timeified = fieldConversion(options, [misformattedStrings]);
     expect(
       timeified[0].fields.map((f) => ({
         name: f.name,

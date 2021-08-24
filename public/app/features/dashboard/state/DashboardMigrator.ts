@@ -686,8 +686,7 @@ export class DashboardMigrator {
   // New queries, that were created during migration, are put at the end of the array.
   migrateCloudWatchQueries() {
     for (const panel of this.dashboard.panels) {
-      for (let index = 0; index < panel.targets.length; index++) {
-        const target = panel.targets[index];
+      for (const target of panel.targets) {
         if (isLegacyCloudWatchQuery(target)) {
           const newQueries = migrateMultipleStatsMetricsQuery(target, [...panel.targets]);
           for (const newQuery of newQueries) {
@@ -697,8 +696,7 @@ export class DashboardMigrator {
       }
     }
 
-    for (let index = 0; index < this.dashboard.annotations.list.length; index++) {
-      const annotation = this.dashboard.annotations.list[index];
+    for (const annotation of this.dashboard.annotations.list) {
       if (isLegacyCloudWatchAnnotationQuery(annotation)) {
         const newAnnotationQueries = migrateMultipleStatsAnnotationQuery(annotation);
         for (const newAnnotationQuery of newAnnotationQueries) {

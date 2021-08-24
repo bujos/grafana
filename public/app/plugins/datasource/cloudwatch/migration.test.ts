@@ -1,5 +1,5 @@
 import { DataQuery } from '@grafana/data';
-import { migrateMultipleStatsAnnotationQuery, migrateMultipleStatsMetricsQuery } from './migration';
+import { migrateMultipleStatsAnnotationQuery, migrateMultipleStatsMetricsQuery } from './migrations';
 import { CloudWatchAnnotationQuery, CloudWatchMetricsQuery } from './types';
 
 describe('migration', () => {

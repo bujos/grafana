@@ -8,9 +8,7 @@ import { isFinite, isNumber } from 'lodash';
 import { ArrayVector } from '../../vector';
 
 export interface FieldConversionTransformerOptions {
-  targetField: string | undefined;
-  destinationType: FieldType | undefined;
-  dateFormat?: string;
+  conversions: FieldConversionOptions[];
 }
 
 export interface FieldConversionOptions {
@@ -35,7 +33,7 @@ export const fieldConversionFieldInfo = {
   },
   dateFormat: {
     label: 'Date Format',
-    description: 'Select the desired date format',
+    description: 'e.g. YYYY-MM-DD',
   },
 };
 
@@ -44,10 +42,11 @@ export const fieldConversionFieldInfo = {
  */
 export const fieldConversionTransformer: SynchronousDataTransformerInfo<FieldConversionTransformerOptions> = {
   id: DataTransformerID.fieldConversion,
-  name: 'Convert Fields',
+  name: 'Convert fields',
   description: 'Convert a field to a specified field type',
   defaultOptions: {
     fields: {},
+    conversions: [{ targetField: undefined, destinationType: undefined, dateFormat: undefined }],
   },
 
   operator: (options) => (source) => source.pipe(map((data) => fieldConversionTransformer.transformer(options)(data))),
@@ -68,25 +67,35 @@ export const fieldConversionTransformer: SynchronousDataTransformerInfo<FieldCon
  * @alpha
  */
 export function fieldConversion(options: FieldConversionTransformerOptions, frames: DataFrame[]): DataFrame[] {
-  if (!options.targetField) {
+  if (!options.conversions.length) {
     return frames;
   }
 
   const frameCopy: DataFrame[] = [];
-  let conversions = 0;
 
   for (const frame of frames) {
     for (let fieldIdx = 0; fieldIdx < frame.fields.length; fieldIdx++) {
       let field = frame.fields[fieldIdx];
-      if (field.name === options.targetField) {
-        //check in about matchers with Ryan
-        if (options.destinationType === FieldType.time) {
-          frame.fields[fieldIdx] = ensureTimeField(field, options.dateFormat);
+      for (let cIdx = 0; cIdx < options.conversions.length; cIdx++) {
+        if (field.name === options.conversions[cIdx].targetField) {
+          //check in about matchers with Ryan
+          const conversion = options.conversions[cIdx];
+          switch (conversion.destinationType) {
+            case FieldType.time:
+              frame.fields[fieldIdx] = ensureTimeField(field, conversion.dateFormat);
+              break;
+            case FieldType.number:
+              frame.fields[fieldIdx] = fieldToNumberField(field);
+              break;
+            case FieldType.string:
+              frame.fields[fieldIdx] = fieldToStringField(field);
+              break;
+            case FieldType.boolean:
+              frame.fields[fieldIdx] = fieldToBooleanField(field);
+              break;
+          }
+          break;
         }
-        conversions++;
-        // if (conversions === options.conversions.length) {
-        //   break;
-        // }
       }
     }
     frameCopy.push(frame);
@@ -94,7 +103,7 @@ export function fieldConversion(options: FieldConversionTransformerOptions, fram
   return frameCopy;
 }
 
-function stringToTimeField(field: Field, dateFormat?: string): Field {
+function fieldToTimeField(field: Field, dateFormat?: string): Field {
   const timeValues = field.values.toArray().map((value) => {
     if (value) {
       let parsed;
@@ -115,6 +124,42 @@ function stringToTimeField(field: Field, dateFormat?: string): Field {
   };
 }
 
+function fieldToNumberField(field: Field): Field {
+  const numValues = field.values.toArray().map((value) => {
+    if (value) {
+      const parsed = +value;
+      return isFinite(parsed) ? parsed : undefined;
+    }
+    return undefined;
+  });
+
+  return {
+    ...field,
+    type: FieldType.number,
+    values: new ArrayVector(numValues),
+  };
+}
+
+function fieldToBooleanField(field: Field): Field {
+  const booleanValues = field.values.toArray().map((value) => Boolean(value));
+
+  return {
+    ...field,
+    type: FieldType.number,
+    values: new ArrayVector(booleanValues),
+  };
+}
+
+function fieldToStringField(field: Field): Field {
+  const booleanValues = field.values.toArray().map((value) => `${value}`);
+
+  return {
+    ...field,
+    type: FieldType.number,
+    values: new ArrayVector(booleanValues),
+  };
+}
+
 export function ensureTimeField(field: Field, dateFormat?: string): Field {
   //already time
   if ((field.type === FieldType.time && field.values.length) || isNumber(field.values.get(0))) {
@@ -122,5 +167,5 @@ export function ensureTimeField(field: Field, dateFormat?: string): Field {
   }
   //TO DO
   //add more checks
-  return stringToTimeField(field, dateFormat);
+  return fieldToTimeField(field, dateFormat);
 }

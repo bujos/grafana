@@ -19,6 +19,8 @@ import {
   ValueMap,
   ValueMapping,
   getActiveThreshold,
+  AnnotationQuery,
+  DataQuery,
 } from '@grafana/data';
 // Constants
 import {
@@ -1006,7 +1008,7 @@ function upgradeValueMappingsForPanel(panel: PanelModel) {
   return panel;
 }
 
-function isLegacyCloudWatchQuery(target: any): target is CloudWatchMetricsQuery {
+function isLegacyCloudWatchQuery(target: DataQuery): target is CloudWatchMetricsQuery {
   return (
     target.hasOwnProperty('dimensions') &&
     target.hasOwnProperty('namespace') &&
@@ -1015,7 +1017,7 @@ function isLegacyCloudWatchQuery(target: any): target is CloudWatchMetricsQuery 
   );
 }
 
-function isLegacyCloudWatchAnnotationQuery(target: any): target is CloudWatchAnnotationQuery {
+function isLegacyCloudWatchAnnotationQuery(target: AnnotationQuery<DataQuery>): target is CloudWatchAnnotationQuery {
   return (
     target.hasOwnProperty('dimensions') &&
     target.hasOwnProperty('namespace') &&

@@ -39,7 +39,7 @@ import { getStandardFieldConfigs, getStandardOptionEditors } from '@grafana/ui';
 import {
   migrateMultipleStatsMetricsQuery,
   migrateMultipleStatsAnnotationQuery,
-} from 'app/plugins/datasource/cloudwatch/migration';
+} from 'app/plugins/datasource/cloudwatch/migrations';
 import { CloudWatchMetricsQuery, CloudWatchAnnotationQuery } from 'app/plugins/datasource/cloudwatch/types';
 
 standardEditorsRegistry.setInit(getStandardOptionEditors);

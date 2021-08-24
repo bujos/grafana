@@ -822,7 +822,7 @@ export class CloudWatchDatasource extends DataSourceWithBackend<CloudWatchQuery,
 
   annotationQuery(options: any) {
     const annotation = options.annotation;
-    const statistics = annotation.statistics.map((s: any) => this.templateSrv.replace(s));
+    const statistic = this.templateSrv.replace(annotation.statistic);
     const defaultPeriod = annotation.prefixMatching ? '' : '300';
     let period = annotation.period || defaultPeriod;
     period = parseInt(period, 10);
@@ -832,7 +832,7 @@ export class CloudWatchDatasource extends DataSourceWithBackend<CloudWatchQuery,
       namespace: this.templateSrv.replace(annotation.namespace),
       metricName: this.templateSrv.replace(annotation.metricName),
       dimensions: this.convertDimensionFormat(annotation.dimensions, {}),
-      statistics: statistics,
+      statistic: statistic,
       period: period,
       actionPrefix: annotation.actionPrefix || '',
       alarmNamePrefix: annotation.alarmNamePrefix || '',

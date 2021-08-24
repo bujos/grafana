@@ -36,8 +36,11 @@ import { config } from 'app/core/config';
 import { plugin as statPanelPlugin } from 'app/plugins/panel/stat/module';
 import { plugin as gaugePanelPlugin } from 'app/plugins/panel/gauge/module';
 import { getStandardFieldConfigs, getStandardOptionEditors } from '@grafana/ui';
-import { CloudWatchMetricsQuery } from 'app/plugins/datasource/cloudwatch/types';
-import { getNextRefIdChar } from 'app/core/utils/query';
+import {
+  migrateMultipleStatsMetricsQuery,
+  migrateMultipleStatsAnnotationQuery,
+} from 'app/plugins/datasource/cloudwatch/migration';
+import { CloudWatchMetricsQuery, CloudWatchAnnotationQuery } from 'app/plugins/datasource/cloudwatch/types';
 
 standardEditorsRegistry.setInit(getStandardOptionEditors);
 standardFieldConfigEditorRegistry.setInit(getStandardFieldConfigs);
@@ -678,36 +681,31 @@ export class DashboardMigrator {
     }
   }
 
+  // Migrates metric queris and/or annotation queries that use more than one statistic.
+  // E.g query.statistics = ['Max', 'Min'] will be migrated to two queries - query1.statistic = 'Max' and query2.statistic = 'Min'
+  // New queries, that were created during migration, are put at the end of the array.
   migrateCloudWatchQueries() {
     for (const panel of this.dashboard.panels) {
-      for (const target of panel.targets) {
-        if (this.isLegacyCloudWatchQuery(target)) {
-          const newQueryRows = [];
-          const cloudWatchQuery = target as CloudWatchMetricsQuery;
-          if (cloudWatchQuery?.statistics && cloudWatchQuery?.statistics.length > 1) {
-            for (const stat of cloudWatchQuery.statistics.splice(1)) {
-              newQueryRows.push({ ...cloudWatchQuery, statistic: stat });
-            }
-            cloudWatchQuery.statistic = cloudWatchQuery.statistics[0];
+      for (let index = 0; index < panel.targets.length; index++) {
+        const target = panel.targets[index];
+        if (isLegacyCloudWatchQuery(target)) {
+          const newQueries = migrateMultipleStatsMetricsQuery(target, [...panel.targets]);
+          for (const newQuery of newQueries) {
+            panel.targets.push(newQuery);
           }
-          for (const newTarget of newQueryRows) {
-            newTarget.refId = getNextRefIdChar(panel.targets);
-            delete newTarget.statistics;
-            panel.targets.push(newTarget);
-          }
-          delete cloudWatchQuery.statistics;
         }
       }
     }
-  }
 
-  isLegacyCloudWatchQuery(target: any) {
-    return (
-      target.hasOwnProperty('dimensions') &&
-      target.hasOwnProperty('namespace') &&
-      target.hasOwnProperty('region') &&
-      target.hasOwnProperty('statistics')
-    );
+    for (let index = 0; index < this.dashboard.annotations.list.length; index++) {
+      const annotation = this.dashboard.annotations.list[index];
+      if (isLegacyCloudWatchAnnotationQuery(annotation)) {
+        const newAnnotationQueries = migrateMultipleStatsAnnotationQuery(annotation);
+        for (const newAnnotationQuery of newAnnotationQueries) {
+          this.dashboard.annotations.list.push(newAnnotationQuery);
+        }
+      }
+    }
   }
 
   upgradeToGridLayout(old: any) {
@@ -1008,6 +1006,25 @@ function upgradeValueMappingsForPanel(panel: PanelModel) {
   }
 
   return panel;
+}
+
+function isLegacyCloudWatchQuery(target: any): target is CloudWatchMetricsQuery {
+  return (
+    target.hasOwnProperty('dimensions') &&
+    target.hasOwnProperty('namespace') &&
+    target.hasOwnProperty('region') &&
+    target.hasOwnProperty('statistics')
+  );
+}
+
+function isLegacyCloudWatchAnnotationQuery(target: any): target is CloudWatchAnnotationQuery {
+  return (
+    target.hasOwnProperty('dimensions') &&
+    target.hasOwnProperty('namespace') &&
+    target.hasOwnProperty('region') &&
+    target.hasOwnProperty('prefixMatching') &&
+    target.hasOwnProperty('statistics')
+  );
 }
 
 function upgradeValueMappings(oldMappings: any, thresholds?: ThresholdsConfig): ValueMapping[] | undefined {

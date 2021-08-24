@@ -169,15 +169,6 @@ func parseRequestQuery(model *simplejson.Json, refId string, startTime time.Time
 	}, nil
 }
 
-func parseStatistics(model *simplejson.Json) []string {
-	var statistics []string
-	for _, s := range model.Get("statistics").MustArray() {
-		statistics = append(statistics, s.(string))
-	}
-
-	return statistics
-}
-
 func parseDimensions(model *simplejson.Json) (map[string][]string, error) {
 	parsedDimensions := make(map[string][]string)
 	for k, v := range model.Get("dimensions").MustMap() {

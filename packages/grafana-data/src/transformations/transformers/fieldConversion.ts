@@ -108,7 +108,7 @@ function fieldToTimeField(field: Field, dateFormat?: string): Field {
     if (value) {
       let parsed;
       if (dateFormat) {
-        parsed = dateTimeParse(value, { format: dateFormat });
+        parsed = dateTimeParse(value, { format: dateFormat }).valueOf();
       } else {
         parsed = dateTimeParse(value).valueOf();
       }
@@ -145,7 +145,7 @@ function fieldToBooleanField(field: Field): Field {
 
   return {
     ...field,
-    type: FieldType.number,
+    type: FieldType.boolean,
     values: new ArrayVector(booleanValues),
   };
 }
@@ -155,7 +155,7 @@ function fieldToStringField(field: Field): Field {
 
   return {
     ...field,
-    type: FieldType.number,
+    type: FieldType.string,
     values: new ArrayVector(booleanValues),
   };
 }

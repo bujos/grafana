@@ -327,21 +327,6 @@ export interface MetricQuery {
 // 	IntervalMs    int64
 // }
 
-export interface CloudWatchMetricsAnnotation {
-  namespace: string;
-  metricName: string;
-  expression: string;
-  dimensions: {};
-  region: string;
-  id: string;
-  alias: string;
-  statistics: string[];
-  matchExact: true;
-  prefixMatching: false;
-  actionPrefix: string;
-  alarmNamePrefix: string;
-}
-
 export interface ExecutedQueryPreview {
   id: string;
   executedQuery: string;

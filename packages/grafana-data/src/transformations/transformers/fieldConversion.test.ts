@@ -1,7 +1,8 @@
 import { toDataFrame } from '../../dataframe/processDataFrame';
 import { FieldType } from '../../types/dataFrame';
 import { mockTransformationsRegistry } from '../../utils/tests/mockTransformationsRegistry';
-import { fieldConversion, fieldConversionTransformer } from './fieldConversion';
+import { ArrayVector } from '../../vector';
+import { ensureTimeField, fieldConversion, fieldConversionTransformer } from './fieldConversion';
 
 describe('field conversion transformer', () => {
   beforeAll(() => {
@@ -232,7 +233,7 @@ describe('field conversion transformer', () => {
     ]);
   });
 
-  it('will convert to boolean', () => {
+  it('will convert field to booleans', () => {
     const options = {
       conversions: [
         { targetField: 'numbers', destinationType: FieldType.boolean },
@@ -270,7 +271,7 @@ describe('field conversion transformer', () => {
     ]);
   });
 
-  it('will convert to strings', () => {
+  it('will convert field to strings', () => {
     const options = {
       conversions: [{ targetField: 'numbers', destinationType: FieldType.string }],
     };
@@ -309,6 +310,26 @@ describe('field conversion transformer', () => {
       },
     ]);
   });
+});
 
-  //test ensureTime
+describe('ensureTimeField', () => {
+  it('will make the field have a type of time if already a number', () => {
+    const stringTime = toDataFrame({
+      fields: [
+        {
+          name: 'proper dates',
+          type: FieldType.number,
+          values: [1626674400000, 1627020000000, 1627192800000, 1627797600000, 1627884000000],
+        },
+        { name: 'A', type: FieldType.number, values: [1, 2, 3, 4, 5] },
+      ],
+    });
+
+    expect(ensureTimeField(stringTime.fields[0])).toEqual({
+      config: {},
+      name: 'proper dates',
+      type: FieldType.time,
+      values: new ArrayVector([1626674400000, 1627020000000, 1627192800000, 1627797600000, 1627884000000]),
+    });
+  });
 });

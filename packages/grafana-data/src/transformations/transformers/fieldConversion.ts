@@ -4,7 +4,6 @@ import { map } from 'rxjs/operators';
 import { DataTransformerID } from './ids';
 import { DataFrame, Field, FieldType } from '../../types/dataFrame';
 import { dateTimeParse } from '../../datetime';
-import { isFinite, isNumber } from 'lodash';
 import { ArrayVector } from '../../vector';
 
 export interface FieldConversionTransformerOptions {
@@ -73,7 +72,7 @@ export function fieldConversion(options: FieldConversionTransformerOptions, fram
 
   const frameCopy: DataFrame[] = [];
 
-  for (const frame of frames) {
+  frames.forEach((frame) => {
     for (let fieldIdx = 0; fieldIdx < frame.fields.length; fieldIdx++) {
       let field = frame.fields[fieldIdx];
       for (let cIdx = 0; cIdx < options.conversions.length; cIdx++) {
@@ -99,23 +98,23 @@ export function fieldConversion(options: FieldConversionTransformerOptions, fram
       }
     }
     frameCopy.push(frame);
-  }
+  });
   return frameCopy;
 }
 
-function fieldToTimeField(field: Field, dateFormat?: string): Field {
-  const timeValues = field.values.toArray().map((value) => {
-    if (value) {
-      let parsed;
-      if (dateFormat) {
-        parsed = dateTimeParse(value, { format: dateFormat }).valueOf();
-      } else {
-        parsed = dateTimeParse(value).valueOf();
-      }
-      return isFinite(parsed) ? parsed : undefined;
+export function fieldToTimeField(field: Field, dateFormat?: string): Field {
+  let opts = dateFormat ? { format: dateFormat } : undefined;
+
+  const timeValues = field.values.toArray().slice();
+
+  for (let t = 0; t < timeValues.length; t++) {
+    if (timeValues[t]) {
+      let parsed = dateTimeParse(timeValues[t], opts).valueOf();
+      timeValues[t] = Number.isFinite(parsed) ? parsed : undefined;
+    } else {
+      timeValues[t] = undefined;
     }
-    return undefined;
-  });
+  }
 
   return {
     ...field,
@@ -125,13 +124,16 @@ function fieldToTimeField(field: Field, dateFormat?: string): Field {
 }
 
 function fieldToNumberField(field: Field): Field {
-  const numValues = field.values.toArray().map((value) => {
-    if (value) {
-      const parsed = +value;
-      return isFinite(parsed) ? parsed : undefined;
+  const numValues = field.values.toArray().slice();
+
+  for (let n = 0; n < numValues.length; n++) {
+    if (numValues[n]) {
+      let number = +numValues[n];
+      numValues[n] = Number.isFinite(number) ? number : undefined;
+    } else {
+      numValues[n] = undefined;
     }
-    return undefined;
-  });
+  }
 
   return {
     ...field,
@@ -141,7 +143,11 @@ function fieldToNumberField(field: Field): Field {
 }
 
 function fieldToBooleanField(field: Field): Field {
-  const booleanValues = field.values.toArray().map((value) => Boolean(value));
+  const booleanValues = field.values.toArray().slice();
+
+  for (let b = 0; b < booleanValues.length; b++) {
+    booleanValues[b] = Boolean(booleanValues[b]);
+  }
 
   return {
     ...field,
@@ -151,21 +157,31 @@ function fieldToBooleanField(field: Field): Field {
 }
 
 function fieldToStringField(field: Field): Field {
-  const booleanValues = field.values.toArray().map((value) => `${value}`);
+  const stringValues = field.values.toArray().slice();
+
+  for (let s = 0; s < stringValues.length; s++) {
+    stringValues[s] = `${stringValues[s]}`;
+  }
 
   return {
     ...field,
     type: FieldType.string,
-    values: new ArrayVector(booleanValues),
+    values: new ArrayVector(stringValues),
   };
 }
 
+/**
+ * @alpha
+ */
 export function ensureTimeField(field: Field, dateFormat?: string): Field {
-  //already time
-  if ((field.type === FieldType.time && field.values.length) || isNumber(field.values.get(0))) {
-    return field;
+  if (field.type === FieldType.time && field.values.length && typeof field.values.get(0) === 'number') {
+    return field; //already time
   }
-  //TO DO
-  //add more checks
+  if (field.values.length && !isNaN(field.values.get(0))) {
+    return {
+      ...field,
+      type: FieldType.time,
+    };
+  }
   return fieldToTimeField(field, dateFormat);
 }

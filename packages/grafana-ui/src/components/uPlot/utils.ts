@@ -1,5 +1,5 @@
 import { DataFrame, ensureTimeField, Field, FieldType } from '@grafana/data';
-import { StackingMode } from './config';
+import { StackingMode } from '@grafana/schema';
 import { createLogger } from '../../utils/logger';
 import { attachDebugger } from '../../utils';
 import { AlignedData, Options, PaddingSide } from 'uplot';

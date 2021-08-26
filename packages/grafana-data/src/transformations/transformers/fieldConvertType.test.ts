@@ -2,11 +2,11 @@ import { toDataFrame } from '../../dataframe/processDataFrame';
 import { FieldType } from '../../types/dataFrame';
 import { mockTransformationsRegistry } from '../../utils/tests/mockTransformationsRegistry';
 import { ArrayVector } from '../../vector';
-import { ensureTimeField, fieldConversion, fieldConversionTransformer } from './fieldConversion';
+import { ensureTimeField, fieldConvertType, fieldConvertTypeTransformer } from './fieldConvertType';
 
 describe('field conversion transformer', () => {
   beforeAll(() => {
-    mockTransformationsRegistry([fieldConversionTransformer]);
+    mockTransformationsRegistry([fieldConvertTypeTransformer]);
   });
 
   it('will parse properly formatted strings to time', () => {
@@ -31,7 +31,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const timeified = fieldConversion(options, [stringTime]);
+    const timeified = fieldConvertType(options, [stringTime]);
     expect(
       timeified[0].fields.map((f) => ({
         name: f.name,
@@ -72,7 +72,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const timeified = fieldConversion(options, [yearFormat]);
+    const timeified = fieldConvertType(options, [yearFormat]);
     expect(
       timeified[0].fields.map((f) => ({
         name: f.name,
@@ -108,7 +108,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const timeified = fieldConversion(options, [misformattedStrings]);
+    const timeified = fieldConvertType(options, [misformattedStrings]);
     expect(
       timeified[0].fields.map((f) => ({
         name: f.name,
@@ -150,7 +150,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const numbers = fieldConversion(options, [stringyNumbers]);
+    const numbers = fieldConvertType(options, [stringyNumbers]);
 
     expect(
       numbers[0].fields.map((f) => ({
@@ -208,7 +208,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const numbers = fieldConversion(options, [stringyNumbers]);
+    const numbers = fieldConvertType(options, [stringyNumbers]);
     expect(
       numbers[0].fields.map((f) => ({
         name: f.name,
@@ -252,7 +252,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const booleans = fieldConversion(options, [comboTypes]);
+    const booleans = fieldConvertType(options, [comboTypes]);
     expect(
       booleans[0].fields.map((f) => ({
         name: f.name,
@@ -287,7 +287,7 @@ describe('field conversion transformer', () => {
       ],
     });
 
-    const stringified = fieldConversion(options, [comboTypes]);
+    const stringified = fieldConvertType(options, [comboTypes]);
     expect(
       stringified[0].fields.map((f) => ({
         name: f.name,

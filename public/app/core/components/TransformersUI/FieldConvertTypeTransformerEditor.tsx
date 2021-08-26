@@ -10,18 +10,15 @@ import {
   TransformerUIProps,
 } from '@grafana/data';
 
-import {
-  FieldConversionTransformerOptions,
-  fieldConversionFieldInfo,
-} from '@grafana/data/src/transformations/transformers/fieldConversion';
+import { FieldConvertTypeTransformerOptions } from '@grafana/data/src/transformations/transformers/fieldConvertType';
 import { Button, InlineField, InlineFieldRow, Input, Select } from '@grafana/ui';
 import { FieldNamePicker } from '../../../../../packages/grafana-ui/src/components/MatchersUI/FieldNamePicker';
 
-const dummyFieldSettings: StandardEditorsRegistryItem<string, FieldNamePickerConfigSettings> = {
-  settings: {},
+const fieldNamePickerSettings: StandardEditorsRegistryItem<string, FieldNamePickerConfigSettings> = {
+  settings: { width: 24 },
 } as any;
 
-export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<FieldConversionTransformerOptions>> = ({
+export const FieldConvertTypeTransformerEditor: React.FC<TransformerUIProps<FieldConvertTypeTransformerOptions>> = ({
   input,
   options,
   onChange,
@@ -69,7 +66,7 @@ export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<Field
     [onChange, options]
   );
 
-  const onAddFieldConversion = useCallback(() => {
+  const onAddFieldConvertType = useCallback(() => {
     onChange({
       ...options,
       conversions: [
@@ -79,7 +76,7 @@ export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<Field
     });
   }, [onChange, options]);
 
-  const onRemoveFieldConversion = useCallback(
+  const onRemoveFieldConvertType = useCallback(
     (idx) => {
       const removed = options.conversions;
       removed.splice(idx, 1);
@@ -92,7 +89,6 @@ export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<Field
   );
 
   //TODO
-  //reformat size of inputs
   //show units for fields
 
   return (
@@ -100,42 +96,37 @@ export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<Field
       {options.conversions.map((c, idx) => {
         return (
           <InlineFieldRow key={`${c.targetField}-${idx}`}>
-            <InlineField label={fieldConversionFieldInfo.targetField.label}>
+            <InlineField label={'Target field'}>
               <FieldNamePicker
                 context={{ data: input }}
                 value={c.targetField || ''}
                 onChange={onSelectField(idx)}
-                item={dummyFieldSettings}
+                item={fieldNamePickerSettings}
               />
             </InlineField>
-            <InlineField label={fieldConversionFieldInfo.destinationType.label}>
+            <InlineField label={'Type to convert to'}>
               <Select
                 menuShouldPortal
                 options={allTypes}
                 value={c.destinationType}
-                placeholder={fieldConversionFieldInfo.destinationType.description}
+                placeholder={'Select the type'}
                 onChange={onSelectDestinationType(idx)}
-                width={24}
+                width={18}
               />
             </InlineField>
             {c.destinationType === FieldType.time && (
-              <InlineField label={fieldConversionFieldInfo.dateFormat.label}>
-                <Input
-                  value={c.dateFormat}
-                  placeholder={fieldConversionFieldInfo.dateFormat.description}
-                  onChange={onInputFormat(idx)}
-                  width={24}
-                />
+              <InlineField label={'Date Format'}>
+                <Input value={c.dateFormat} placeholder={'e.g. YYYY-MM-DD'} onChange={onInputFormat(idx)} width={24} />
               </InlineField>
             )}
-            <Button size="md" icon="trash-alt" variant="secondary" onClick={() => onRemoveFieldConversion(idx)} />
+            <Button size="md" icon="trash-alt" variant="secondary" onClick={() => onRemoveFieldConvertType(idx)} />
           </InlineFieldRow>
         );
       })}
       <Button
         size="sm"
         icon="plus"
-        onClick={onAddFieldConversion}
+        onClick={onAddFieldConvertType}
         variant="secondary"
         aria-label={'Add field conversion'}
       >
@@ -145,10 +136,10 @@ export const FieldConversionTransformerEditor: React.FC<TransformerUIProps<Field
   );
 };
 
-export const fieldConversionTransformRegistryItem: TransformerRegistryItem<FieldConversionTransformerOptions> = {
-  id: DataTransformerID.fieldConversion,
-  editor: FieldConversionTransformerEditor,
-  transformation: standardTransformers.fieldConversionTransformer,
-  name: standardTransformers.fieldConversionTransformer.name,
-  description: standardTransformers.fieldConversionTransformer.description,
+export const fieldConvertTypeTransformRegistryItem: TransformerRegistryItem<FieldConvertTypeTransformerOptions> = {
+  id: DataTransformerID.fieldConvertType,
+  editor: FieldConvertTypeTransformerEditor,
+  transformation: standardTransformers.fieldConvertTypeTransformer,
+  name: standardTransformers.fieldConvertTypeTransformer.name,
+  description: standardTransformers.fieldConvertTypeTransformer.description,
 };

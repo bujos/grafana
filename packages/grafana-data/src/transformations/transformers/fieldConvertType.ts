@@ -6,55 +6,35 @@ import { DataFrame, Field, FieldType } from '../../types/dataFrame';
 import { dateTimeParse } from '../../datetime';
 import { ArrayVector } from '../../vector';
 
-export interface FieldConversionTransformerOptions {
-  conversions: FieldConversionOptions[];
+export interface FieldConvertTypeTransformerOptions {
+  conversions: FieldConvertTypeOptions[];
 }
 
-export interface FieldConversionOptions {
+export interface FieldConvertTypeOptions {
   targetField: string | undefined;
   destinationType: FieldType | undefined;
   dateFormat?: string;
 }
 
 /**
- * This is a helper class to use the same text in both a panel and transformer UI
- *
- * @internal
- */
-export const fieldConversionFieldInfo = {
-  targetField: {
-    label: 'Target field',
-    description: 'Select the target field',
-  },
-  destinationType: {
-    label: 'Type to convert to',
-    description: 'Select the type to convert',
-  },
-  dateFormat: {
-    label: 'Date Format',
-    description: 'e.g. YYYY-MM-DD',
-  },
-};
-
-/**
  * @alpha
  */
-export const fieldConversionTransformer: SynchronousDataTransformerInfo<FieldConversionTransformerOptions> = {
-  id: DataTransformerID.fieldConversion,
-  name: 'Convert fields',
+export const fieldConvertTypeTransformer: SynchronousDataTransformerInfo<FieldConvertTypeTransformerOptions> = {
+  id: DataTransformerID.fieldConvertType,
+  name: 'Convert field type',
   description: 'Convert a field to a specified field type',
   defaultOptions: {
     fields: {},
     conversions: [{ targetField: undefined, destinationType: undefined, dateFormat: undefined }],
   },
 
-  operator: (options) => (source) => source.pipe(map((data) => fieldConversionTransformer.transformer(options)(data))),
+  operator: (options) => (source) => source.pipe(map((data) => fieldConvertTypeTransformer.transformer(options)(data))),
 
-  transformer: (options: FieldConversionTransformerOptions) => (data: DataFrame[]) => {
+  transformer: (options: FieldConvertTypeTransformerOptions) => (data: DataFrame[]) => {
     if (!Array.isArray(data) || data.length === 0) {
       return data;
     }
-    const timeParsed = fieldConversion(options, data);
+    const timeParsed = fieldConvertType(options, data);
     if (!timeParsed) {
       return [];
     }
@@ -65,7 +45,7 @@ export const fieldConversionTransformer: SynchronousDataTransformerInfo<FieldCon
 /**
  * @alpha
  */
-export function fieldConversion(options: FieldConversionTransformerOptions, frames: DataFrame[]): DataFrame[] {
+export function fieldConvertType(options: FieldConvertTypeTransformerOptions, frames: DataFrame[]): DataFrame[] {
   if (!options.conversions.length) {
     return frames;
   }
@@ -177,7 +157,7 @@ export function ensureTimeField(field: Field, dateFormat?: string): Field {
   if (field.type === FieldType.time && field.values.length && typeof field.values.get(0) === 'number') {
     return field; //already time
   }
-  if (field.values.length && !isNaN(field.values.get(0))) {
+  if (field.values.length && typeof field.values.get(0) === 'number') {
     return {
       ...field,
       type: FieldType.time,
